@@ -7,6 +7,7 @@ import android.view.View
 import kotlinx.android.synthetic.main.activity_run_test.*
 import kotlinx.android.synthetic.main.content_run_test.*
 import net.maiatoday.hellolittleprinter.util.toast
+import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -19,8 +20,8 @@ class RunTestActivity : AppCompatActivity() {
     val timerHandler = Handler()
     val timerRunnable: Runnable = Runnable {
         if (isRunning) {
-            sendPrintJob()
             incrementCount()
+            sendPrintJob()
         }
     }
 
@@ -64,8 +65,8 @@ class RunTestActivity : AppCompatActivity() {
             textRunning.visibility = View.VISIBLE
             textStopped.visibility = View.GONE
             buttonStop.text = "Stop"
-            sendPrintJob()
             incrementCount()
+            sendPrintJob()
         } else {
             textRunning.visibility = View.GONE
             textStopped.visibility = View.VISIBLE
@@ -113,8 +114,8 @@ class RunTestActivity : AppCompatActivity() {
     private fun startTest() {
         count = 0
         startTestTime()
-        sendPrintJob()
         incrementCount()
+        sendPrintJob()
     }
 
 
@@ -141,7 +142,10 @@ class RunTestActivity : AppCompatActivity() {
 
 
     private fun sendPrintJob() {
-        toast("send job to printer")
+        val df = SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
+        val now = df.format(Date().time)
+        toast("$now \nsend job #$count to printer")
+        //TODO send job to printer
     }
 
 }

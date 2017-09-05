@@ -38,16 +38,16 @@ class Prefs(context: Context) {
         set(value) = prefs.edit().putLong(END_TIME, value).apply()
 
     override fun toString(): String {
-        val df = SimpleDateFormat("MM/dd/yyyy HH:mm:ss")
+        val df = SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
         val startime = df.format(startTimeMs)
         val endtime = df.format(endTimeMs)
         val length = testLength()
         return """
-    |Start time: $startime
-    |End time: $endtime
-    |No of prints: $count
-    |Interval (s): $interval
-    |Running for: $length
+    |Start time:      $startime
+    |End time:        $endtime
+    |No of prints:    $count
+    |Interval (s):    $interval
+    |Running for:     $length
     """.trimMargin()
     }
 

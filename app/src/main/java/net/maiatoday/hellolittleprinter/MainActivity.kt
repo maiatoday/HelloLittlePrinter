@@ -1,30 +1,41 @@
 package net.maiatoday.hellolittleprinter
 
+import android.app.Activity
+import android.arch.lifecycle.LifecycleActivity
+import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
-import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
-import kotlinx.android.synthetic.main.content_run_test.*
+import net.maiatoday.hellolittleprinter.util.toast
+import net.maiatoday.printer.BluetoothCallback
+import net.maiatoday.printer.BluetoothListener
+import net.maiatoday.printer.DeviceListActivity
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : LifecycleActivity(), BluetoothCallback {
+
+    companion object {
+        const val REQUEST_CONNECT_DEVICE = 100
+        const val REQUEST_ENABLE_BT = 101
+    }
 
     private var isConnected: Boolean = false
     private var printerName: String = ""
 
     lateinit var preferences: Prefs
 
+    lateinit var bluetoothListener: BluetoothListener
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        setSupportActionBar(toolbar)
+        //TODO fix setSupportActionBar(toolbar)
         preferences = Prefs(this)
+        bluetoothListener = BluetoothListener(this, lifecycle, this)
 
         fab.setOnClickListener { view ->
             showPreferences()
@@ -63,6 +74,32 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        when (requestCode) {
+            REQUEST_CONNECT_DEVICE -> {if (resultCode == Activity.RESULT_OK) {
+                // Get the device MAC address
+                val address = data?.getExtras()?.getString(
+                        DeviceListActivity.EXTRA_DEVICE_ADDRESS)
+                if (address != null) {
+                    connectToPrinter(address)
+                }
+            }
+            }
+            REQUEST_ENABLE_BT -> {
+                if (resultCode == Activity.RESULT_OK) {
+                    // Bluetooth is now enabled, so set up a session
+                    bluetoothListener.enable()
+                } else {
+                    // User did not enable Bluetooth or an error occured
+                    toast("Bluetooth not enabled!")
+                }
+
+            }
+
+        }
+    }
+
     private fun setConnectionStateOnUI() {
         if (isConnected) {
             textStatus.text = "Connected to printer $printerName"
@@ -78,24 +115,27 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private fun connectToPrinter(name: String) {
+    private fun connectToPrinter(address: String) {
+//        // Get the BLuetoothDevice object
+//        if (BluetoothAdapter.checkBluetoothAddress(address)) {
+//            val device = mBluetoothAdapter
+//                    .getRemoteDevice(address)
+//            // Attempt to connect to the device
+//            mService.connect(device)
+//        }
         //TODO connect to printer
-        printerName = name
-        isConnected = true
-        setConnectionStateOnUI()
+        bluetoothListener.connectToPrinter(address)
+
     }
 
 
     private fun disconnectFromPrinter() {
-        //TODO disconnect from the printer
-        printerName = ""
-        isConnected = false
-        setConnectionStateOnUI()
+        bluetoothListener.disconnectDevice()
     }
 
     private fun showListOfPairedDevices() {
-        //TODO start show list of paired devices
-        connectToPrinter("blahblah")
+        val intent = Intent(this, DeviceListActivity::class.java)
+        startActivityForResult(intent, REQUEST_CONNECT_DEVICE)
     }
 
 
@@ -107,4 +147,26 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
 
     }
+
+
+    override fun requestBTEnable() {
+        val enableIntent = Intent(
+                BluetoothAdapter.ACTION_REQUEST_ENABLE)
+        startActivityForResult(enableIntent, REQUEST_ENABLE_BT)
+    }
+
+    override fun deviceConnected(name: String, address: String) {
+        printerName = name
+        isConnected = true
+        setConnectionStateOnUI()
+    }
+
+    override fun deviceDisconnected() {
+
+        printerName = ""
+        isConnected = false
+        setConnectionStateOnUI()
+    }
 }
+
+

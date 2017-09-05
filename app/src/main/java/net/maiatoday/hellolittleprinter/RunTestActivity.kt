@@ -29,10 +29,13 @@ class RunTestActivity : AppCompatActivity() {
     private var interval: Long = 0
     private var isRunning: Boolean = true
 
+    lateinit var preferences: Prefs
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_run_test)
         setSupportActionBar(toolbar)
+        preferences = Prefs(this)
 
         val intervalString = intent.getStringExtra(EXTRA_INTERVAL)
         interval = intervalString.toLong()
@@ -50,10 +53,8 @@ class RunTestActivity : AppCompatActivity() {
     }
 
     private fun restoreRunningState() {
-        //TODO get count from sharedPrefs
-        count = 10
-        //TODO get start time from sharedPrefs
-        startTime = Date()
+        count = preferences.count
+        startTime = Date(preferences.startTimeMs)
 
         textCount.text = count.toString()
         textStarted.text = startTime.toString()
@@ -74,12 +75,19 @@ class RunTestActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        stopTest()
+        timerHandler.removeCallbacks(timerRunnable)
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
         outState?.putBoolean(KEY_IS_RUNNING, isRunning)
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        if (isRunning) {
+            stopTest()
+        }
     }
 
     private fun setRunningState(running: Boolean) {
@@ -99,7 +107,7 @@ class RunTestActivity : AppCompatActivity() {
 
     private fun stopTest() {
         timerHandler.removeCallbacks(timerRunnable)
-        //TODO store endtime
+        preferences.endTimeMs = Date().time
     }
 
     private fun startTest() {
@@ -112,24 +120,23 @@ class RunTestActivity : AppCompatActivity() {
 
     private fun startTestTime() {
         startTime = Date()
+        preferences.startTimeMs = startTime.time
         textStarted.text = startTime.toString()
-        // TODO store start time to shared prefs
     }
 
     private fun incrementCount() {
         count += 1
+        preferences.count = count
         textCount.text = count.toString()
+        preferences.endTimeMs = Date().time
         updateRunningTime()
-
-        // TODO store count in shared prefs
         if (isRunning && interval > 0) {
             timerHandler.postDelayed(timerRunnable, interval * 1000)
         }
     }
 
     private fun updateRunningTime() {
-        val nowMs = Date().getTime()
-        val ellapsedMs = nowMs - startTime.getTime()
+        val ellapsedMs = preferences.endTimeMs - preferences.startTimeMs
         textRunTime.text =  String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(ellapsedMs),
                 TimeUnit.MILLISECONDS.toMinutes(ellapsedMs) % TimeUnit.HOURS.toMinutes(1),
                 TimeUnit.MILLISECONDS.toSeconds(ellapsedMs) % TimeUnit.MINUTES.toSeconds(1));

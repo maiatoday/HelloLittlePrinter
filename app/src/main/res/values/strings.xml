@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">HelloLittlePrinter</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_run_test">Run Test</string>
+</resources>

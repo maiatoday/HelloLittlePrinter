@@ -8,4 +8,6 @@ public interface BluetoothCallback {
     void requestBTEnable();
     void deviceConnected(String name, String address);
     void deviceDisconnected();
+
+    void popToast(String message);
 }

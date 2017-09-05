@@ -1,19 +1,26 @@
 package net.maiatoday.hellolittleprinter
 
+import android.app.Activity
+import android.arch.lifecycle.LifecycleActivity
+import android.bluetooth.BluetoothAdapter
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
-import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.View
-import kotlinx.android.synthetic.main.activity_run_test.*
 import kotlinx.android.synthetic.main.content_run_test.*
 import net.maiatoday.hellolittleprinter.util.toast
+import net.maiatoday.printer.BluetoothCallback
+import net.maiatoday.printer.BluetoothWrapper
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.TimeUnit
 
-class RunTestActivity : AppCompatActivity() {
+class RunTestActivity : LifecycleActivity(), BluetoothCallback {
+
     companion object {
+        const val TAG = "RunTestActivity"
         const val EXTRA_INTERVAL = "interval"
+        const val EXTRA_DEVICE_ADDRESS = "address"
         const val KEY_IS_RUNNING = "isRunning"
     }
 
@@ -26,30 +33,33 @@ class RunTestActivity : AppCompatActivity() {
     }
 
     private var count = 0
-    private lateinit var startTime : Date
+    private lateinit var startTime: Date
     private var interval: Long = 0
+    private var deviceAddress: String = ""
     private var isRunning: Boolean = true
 
     lateinit var preferences: Prefs
 
+    lateinit var bluetoothWrapper: BluetoothWrapper
+
+    var lastInstanceState: Bundle? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_run_test)
-        setSupportActionBar(toolbar)
+        // setSupportActionBar(toolbar)
         preferences = Prefs(this)
 
+        bluetoothWrapper = BluetoothWrapper(this, lifecycle, this)
         val intervalString = intent.getStringExtra(EXTRA_INTERVAL)
+        deviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS)
         interval = intervalString.toLong()
         textInterval.text = "$intervalString seconds"
         buttonStop.setOnClickListener { view ->
             setRunningState(!isRunning)
         }
-        if (savedInstanceState == null) {
-            setRunningState(true)
-        } else {
-            isRunning = savedInstanceState.getBoolean(KEY_IS_RUNNING)
-            restoreRunningState()
-        }
+        lastInstanceState = savedInstanceState
+        bluetoothWrapper.connectToPrinter(deviceAddress)
 
     }
 
@@ -88,6 +98,26 @@ class RunTestActivity : AppCompatActivity() {
         super.onBackPressed()
         if (isRunning) {
             stopTest()
+        }
+        bluetoothWrapper.disconnectDevice()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        when (requestCode) {
+            MainActivity.REQUEST_ENABLE_BT -> {
+                if (resultCode == Activity.RESULT_OK) {
+                    // Bluetooth is now enabled, so set up a session
+                    bluetoothWrapper.enable()
+                    bluetoothWrapper.connectToPrinter(deviceAddress)
+
+                } else {
+                    // User did not enable Bluetooth or an error occured
+                    toast("Bluetooth not enabled!")
+                }
+
+            }
+
         }
     }
 
@@ -144,8 +174,36 @@ class RunTestActivity : AppCompatActivity() {
     private fun sendPrintJob() {
         val df = SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
         val now = df.format(Date().time)
-        toast("$now \nsend job #$count to printer")
-        //TODO send job to printer
+        val message = "$now \nsend job #$count to printer"
+        toast(message)
+        bluetoothWrapper.send(message)
+    }
+
+
+    override fun requestBTEnable() {
+        val enableIntent = Intent(
+                BluetoothAdapter.ACTION_REQUEST_ENABLE)
+        startActivityForResult(enableIntent, MainActivity.REQUEST_ENABLE_BT)
+    }
+
+    override fun popToast(message: String?) {
+        //toast(message)
+        Log.d(TAG, "popToast"+message)
+    }
+
+
+    override fun deviceConnected(name: String?, address: String?) {
+        bluetoothWrapper.send("Hello World!")
+        if (lastInstanceState == null) {
+            setRunningState(true)
+        } else {
+            isRunning = lastInstanceState!!.getBoolean(KEY_IS_RUNNING)
+            restoreRunningState()
+        }
+    }
+
+    override fun deviceDisconnected() {
+        setRunningState(false)
     }
 
 }

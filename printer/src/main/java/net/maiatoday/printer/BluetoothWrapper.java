@@ -7,24 +7,31 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.os.Handler;
+import android.util.Log;
+
+import java.io.UnsupportedEncodingException;
 
 import static android.arch.lifecycle.Lifecycle.State.STARTED;
 
 /**
- * Bluetooth listener that is a lifecycle observer so it can handle it's own create and cleanup
+ * Bluetooth wrapper that is a lifecycle observer so it can handle it's own create and cleanup
  * Created by maia on 2017/09/05.
  */
 
-public class BluetoothListener implements LifecycleObserver {
+public class BluetoothWrapper implements LifecycleObserver, BluetoothMessageHandler.BluetoothMessages {
+
+    private static final String TAG = "BluetoothListener";
 
     private final Lifecycle lifecycle;
     private final BluetoothAdapter adapter;
     private final BluetoothCallback callback;
     private boolean enabled = false;
     BluetoothService service;
-    private Handler handler = new BluetoothMessageHandler();
+    private Handler handler = new BluetoothMessageHandler(this);
+    private String deviceName = "";
+    private String deviceAddress = "";
 
-    public BluetoothListener(Context context, Lifecycle lifecycle, BluetoothCallback callback) {
+    public BluetoothWrapper(Context context, Lifecycle lifecycle, BluetoothCallback callback) {
         this.lifecycle = lifecycle;
         lifecycle.addObserver(this);
         this.callback = callback;
@@ -55,6 +62,7 @@ public class BluetoothListener implements LifecycleObserver {
             // connect if not connected
             if (adapter != null && service != null && adapter.isEnabled()) {
                 service.start(); //TODO is this right?
+                //TODO reconnect to printer if we were connected?
             }
         }
     }
@@ -62,17 +70,21 @@ public class BluetoothListener implements LifecycleObserver {
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     void stop() {
-        // disconnect if connected
+        if (service != null) {
+            service.stop();
+        }
     }
 
-//    public void connectToPrinter(@org.jetbrains.annotations.NotNull String address) {
+    //    public void connectToPrinter(@org.jetbrains.annotations.NotNull String address) {
     public void connectToPrinter(String address) {
         if (BluetoothAdapter.checkBluetoothAddress(address)) {
             BluetoothDevice device = adapter
                     .getRemoteDevice(address);
             // Attempt to connect to the device
             service.connect(device);
-            callback.deviceConnected(device.getName(), address);
+            deviceName = device.getName();
+            deviceAddress = address;
+
         }
     }
 
@@ -84,5 +96,51 @@ public class BluetoothListener implements LifecycleObserver {
         if (service.getState() == BluetoothService.STATE_CONNECTED) {
             service.write(data);
         }
+    }
+
+    public void send(String data) {
+        if (data.length() > 0) {
+            try {
+                service.write(data.getBytes("GBK"));
+            } catch (UnsupportedEncodingException e) {
+                Log.d(TAG, "send: could not send string with unsupported character set");
+            }
+        }
+    }
+
+    @Override
+    public void stateConnected() {
+        callback.deviceConnected(deviceName, deviceAddress);
+    }
+
+    @Override
+    public void stateConnecting() {
+
+    }
+
+    @Override
+    public void stateListenNone() {
+        callback.deviceDisconnected();
+    }
+
+    @Override
+    public void deviceName(String deviceName) {
+
+    }
+
+    @Override
+    public void toast(String message) {
+        callback.popToast(message);
+    }
+
+    @Override
+    public void connectionLost() {
+        callback.popToast(deviceName + " disconnected");
+        callback.deviceDisconnected();
+    }
+
+    @Override
+    public void unableToConnect() {
+        callback.popToast("Unable to connect");
     }
 }

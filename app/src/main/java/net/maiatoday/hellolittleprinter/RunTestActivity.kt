@@ -136,10 +136,7 @@ class RunTestActivity : AppCompatActivity() {
     }
 
     private fun updateRunningTime() {
-        val ellapsedMs = preferences.endTimeMs - preferences.startTimeMs
-        textRunTime.text =  String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(ellapsedMs),
-                TimeUnit.MILLISECONDS.toMinutes(ellapsedMs) % TimeUnit.HOURS.toMinutes(1),
-                TimeUnit.MILLISECONDS.toSeconds(ellapsedMs) % TimeUnit.MINUTES.toSeconds(1));
+        textRunTime.text = preferences.testLength()
     }
 
 

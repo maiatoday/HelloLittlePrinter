@@ -3,6 +3,7 @@ package net.maiatoday.hellolittleprinter
 import android.content.Intent
 import android.os.Bundle
 import android.support.design.widget.Snackbar
+import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
@@ -26,9 +27,7 @@ class MainActivity : AppCompatActivity() {
         preferences = Prefs(this)
 
         fab.setOnClickListener { view ->
-            Snackbar.make(view, "Results of last test", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
-            //TODO show results of last test
+            showPreferences()
         }
         butttonStart.setOnClickListener { view ->
             val interval = editInterval.text.toString()
@@ -97,5 +96,15 @@ class MainActivity : AppCompatActivity() {
     private fun showListOfPairedDevices() {
         //TODO start show list of paired devices
         connectToPrinter("blahblah")
+    }
+
+
+    private fun showPreferences() {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Results")
+                .setMessage(preferences.toString())
+        val dialog = builder.create()
+        dialog.show()
+
     }
 }

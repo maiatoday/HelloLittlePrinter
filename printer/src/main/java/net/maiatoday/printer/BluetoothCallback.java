@@ -10,4 +10,6 @@ public interface BluetoothCallback {
     void deviceDisconnected();
 
     void popToast(String message);
+
+    void connecting(String name);
 }

@@ -115,7 +115,7 @@ public class BluetoothWrapper implements LifecycleObserver, BluetoothMessageHand
 
     @Override
     public void stateConnecting() {
-
+       callback.connecting(deviceName);
     }
 
     @Override

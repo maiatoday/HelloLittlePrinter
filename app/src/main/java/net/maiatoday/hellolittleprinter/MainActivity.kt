@@ -182,6 +182,11 @@ class MainActivity : LifecycleActivity(), BluetoothCallback {
         preferences.lastDeviceName = ""
         setConnectionStateOnUI()
     }
+
+
+    override fun connecting(name: String?) {
+
+    }
 }
 
 

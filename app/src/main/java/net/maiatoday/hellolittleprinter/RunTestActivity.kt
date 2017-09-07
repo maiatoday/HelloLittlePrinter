@@ -125,12 +125,14 @@ class RunTestActivity : LifecycleActivity(), BluetoothCallback {
         isRunning = running
         if (isRunning) {
             textRunning.visibility = View.VISIBLE
+            textRunning.text = "Running"
             textStopped.visibility = View.GONE
             buttonStop.text = "Stop"
             startTest()
         } else {
             textRunning.visibility = View.GONE
             textStopped.visibility = View.VISIBLE
+            textStopped.text = "Stopped"
             buttonStop.text = "Start"
             stopTest()
         }
@@ -200,9 +202,14 @@ class RunTestActivity : LifecycleActivity(), BluetoothCallback {
 
     override fun popToast(message: String?) {
         //toast(message)
-        Log.d(TAG, "popToast" + message)
+        Log.d(TAG, "popToast " + message)
     }
 
+    override fun connecting(name: String?) {
+        textRunning.visibility = View.VISIBLE
+        textStopped.visibility = View.GONE
+        textRunning.text = "Connecting"
+    }
 
     override fun deviceConnected(name: String?, address: String?) {
 

@@ -150,5 +150,21 @@ public class Command {
 
 	//二维码相关指令		
     public static byte[] GS_k_m_v_r_nL_nH = new byte[] { ESC, 'Z', 0x03, 0x03, 0x08, 0x00, 0x00 };
-	
+
+    public static byte[] INVERT = new byte[] { 0x1b, 0x7b, 0x01 };
+
+    public static byte[] INVERT_CANCEL = new byte[] { 0x1b, 0x7b, 0x00 };
+
+	public static byte[] REVERSE = new byte[] { 0x1d, 0x42, 0x01 };
+
+	public static byte[] REVERSE_CANCEL = new byte[] { 0x1d, 0x42, 0x00 };
+
+	public static byte[] BOLD = new byte[] { 0x1b, 0x45, 0x01 };
+
+	public static byte[] BOLD_CANCEL = new byte[] { 0x1b, 0x45, 0x00 };
+
+	public static byte ALIGN_LEFT = 0x00;
+    public static byte ALIGN_CENTER = 0x01;
+    public static byte ALIGN_RIGHT = 0x02;
+
 }

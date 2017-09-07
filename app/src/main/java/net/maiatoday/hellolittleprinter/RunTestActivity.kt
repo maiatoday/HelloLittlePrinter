@@ -176,7 +176,19 @@ class RunTestActivity : LifecycleActivity(), BluetoothCallback {
         val now = df.format(Date().time)
         val message = "$now \nsend job #$count to printer"
         toast(message)
-        bluetoothWrapper.send(message)
+        val body = listOf("Dragon's Revelry Starcake ", "2 x White Cake", "50 x Saffron Thread", "40 x Piece of Zhaitaffy", "1 x Crystalline Dust")
+        SampleReceipt.print(this,
+                false,
+                R.drawable.hello_little_priniter_logo,
+                count,
+                "OHAI there",
+                body,
+                "Total       2048 Gold",
+                "---Society of little Printers---",
+                "De Nada!",
+                now,
+                bluetoothWrapper
+        )
     }
 
 
@@ -188,12 +200,27 @@ class RunTestActivity : LifecycleActivity(), BluetoothCallback {
 
     override fun popToast(message: String?) {
         //toast(message)
-        Log.d(TAG, "popToast"+message)
+        Log.d(TAG, "popToast" + message)
     }
 
 
     override fun deviceConnected(name: String?, address: String?) {
-        bluetoothWrapper.send("Hello World!")
+
+        val df = SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
+        val now = df.format(Date().time)
+        val body = listOf("Device connected", "Starting test")
+        SampleReceipt.print(this,
+                true,
+                R.drawable.hello_little_priniter_logo,
+                count,
+                "Ping!",
+                body,
+                "Pong!",
+                "---Society of little Printers---",
+                "Boom!",
+                now,
+                bluetoothWrapper
+        )
         if (lastInstanceState == null) {
             setRunningState(true)
         } else {

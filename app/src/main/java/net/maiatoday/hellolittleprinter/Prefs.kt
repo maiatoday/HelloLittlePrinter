@@ -3,7 +3,6 @@ package net.maiatoday.hellolittleprinter
 import android.content.Context
 import android.content.SharedPreferences
 import java.text.SimpleDateFormat
-import java.util.*
 import java.util.concurrent.TimeUnit
 
 /**
@@ -16,6 +15,8 @@ class Prefs(context: Context) {
         const val COUNT = "count"
         const val START_TIME = "startTime"
         const val END_TIME = "endTime"
+        const val DEVICE_NAME = "deviceName"
+        const val DEVICE_ADDRESS = "deviceAddress"
 
     }
 
@@ -37,12 +38,22 @@ class Prefs(context: Context) {
         get() = prefs.getLong(END_TIME, 0)
         set(value) = prefs.edit().putLong(END_TIME, value).apply()
 
+    var lastDeviceAddress: String
+        get() = prefs.getString(DEVICE_ADDRESS, "")
+        set(value) = prefs.edit().putString(DEVICE_ADDRESS, value).apply()
+
+    var lastDeviceName: String
+        get() = prefs.getString(DEVICE_NAME, "")
+        set(value) = prefs.edit().putString(DEVICE_NAME, value).apply()
+
     override fun toString(): String {
         val df = SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
         val startime = df.format(startTimeMs)
         val endtime = df.format(endTimeMs)
         val length = testLength()
         return """
+    |Printer:         $lastDeviceName
+    |Mac:             $lastDeviceAddress
     |Start time:      $startime
     |End time:        $endtime
     |No of prints:    $count

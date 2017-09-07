@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
+import android.text.TextUtils
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -14,7 +15,6 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import net.maiatoday.hellolittleprinter.util.toast
 import net.maiatoday.printer.BluetoothCallback
-import net.maiatoday.printer.BluetoothWrapper
 import net.maiatoday.printer.DeviceListActivity
 
 class MainActivity : LifecycleActivity(), BluetoothCallback {
@@ -26,8 +26,6 @@ class MainActivity : LifecycleActivity(), BluetoothCallback {
     }
 
     private var isConnected: Boolean = false
-    private var printerName: String = ""
-    private var printerAddress: String = ""
 
     lateinit var preferences: Prefs
 
@@ -48,7 +46,7 @@ class MainActivity : LifecycleActivity(), BluetoothCallback {
             preferences.interval = interval.toInt()
             val i = Intent(this, RunTestActivity::class.java)
             i.putExtra(RunTestActivity.EXTRA_INTERVAL, interval)
-            i.putExtra(RunTestActivity.EXTRA_DEVICE_ADDRESS, printerAddress)
+            i.putExtra(RunTestActivity.EXTRA_DEVICE_ADDRESS, preferences.lastDeviceAddress)
             startActivity(i)
         }
         buttonScan.setOnClickListener { view ->
@@ -59,6 +57,10 @@ class MainActivity : LifecycleActivity(), BluetoothCallback {
             disconnectFromPrinter()
         }
         editInterval.setText(preferences.interval.toString())
+        if (!TextUtils.isEmpty(preferences.lastDeviceAddress) &&
+                !TextUtils.isEmpty(preferences.lastDeviceName)) {
+            isConnected = true //TODO this is work around because we don't really connect here
+        }
         setConnectionStateOnUI()
     }
 
@@ -85,8 +87,10 @@ class MainActivity : LifecycleActivity(), BluetoothCallback {
                 // Get the device MAC address
                 val address = data?.getExtras()?.getString(
                         DeviceListActivity.EXTRA_DEVICE_ADDRESS)
-                if (address != null) {
-                    connectToPrinter(address)
+                val name  = data?.getExtras()?.getString(
+                        DeviceListActivity.EXTRA_DEVICE_NAME)
+                if (address != null && name != null) {
+                    connectToPrinter(address, name)
                 }
             }
             }
@@ -106,12 +110,14 @@ class MainActivity : LifecycleActivity(), BluetoothCallback {
 
     private fun setConnectionStateOnUI() {
         if (isConnected) {
-            textStatus.text = "Connected to printer $printerName"
+            val printerName = preferences.lastDeviceName
+            val printerAddress = preferences.lastDeviceAddress
+            textStatus.text = "Selected $printerName \n $printerAddress"
             buttonDisconnect.visibility = View.VISIBLE
             buttonScan.visibility = View.GONE
             butttonStart.isEnabled = true
         } else {
-            textStatus.text = "Not connected to printer"
+            textStatus.text = "No printer selected"
             buttonDisconnect.visibility = View.GONE
             buttonScan.visibility = View.VISIBLE
             butttonStart.isEnabled = false
@@ -119,16 +125,19 @@ class MainActivity : LifecycleActivity(), BluetoothCallback {
     }
 
 
-    private fun connectToPrinter(address: String) {
+    private fun connectToPrinter(address: String, name: String) {
    //     bluetoothWrapper.connectToPrinter(address)
         //TODO remove test
-        deviceConnected("fluffy", address)
+        deviceConnected(name, address)
 
     }
 
 
     private fun disconnectFromPrinter() {
    //     bluetoothWrapper.disconnectDevice()
+        //TODO remove test
+        deviceDisconnected()
+
     }
 
     private fun showListOfPairedDevices() {
@@ -159,17 +168,18 @@ class MainActivity : LifecycleActivity(), BluetoothCallback {
     }
 
     override fun deviceConnected(name: String, address: String) {
-        printerName = name
-        printerAddress = address
         isConnected = true
+        preferences.lastDeviceAddress = address
+        preferences.lastDeviceName = name
         setConnectionStateOnUI()
     //    bluetoothWrapper.send("Hello World! you are connected to $printerName with address $printerAddress")
     }
 
     override fun deviceDisconnected() {
 
-        printerName = ""
         isConnected = false
+        preferences.lastDeviceAddress = ""
+        preferences.lastDeviceName = ""
         setConnectionStateOnUI()
     }
 }

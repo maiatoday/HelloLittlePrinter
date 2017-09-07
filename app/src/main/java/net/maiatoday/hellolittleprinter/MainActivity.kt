@@ -3,6 +3,7 @@ package net.maiatoday.hellolittleprinter
 import android.app.Activity
 import android.arch.lifecycle.LifecycleActivity
 import android.bluetooth.BluetoothAdapter
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
@@ -15,6 +16,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import net.maiatoday.hellolittleprinter.util.toast
 import net.maiatoday.printer.BluetoothCallback
+import net.maiatoday.printer.BluetoothWrapper
 import net.maiatoday.printer.DeviceListActivity
 
 class MainActivity : LifecycleActivity(), BluetoothCallback {
@@ -62,6 +64,13 @@ class MainActivity : LifecycleActivity(), BluetoothCallback {
             isConnected = true //TODO this is work around because we don't really connect here
         }
         setConnectionStateOnUI()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!BluetoothWrapper.checkBluetoothOk()) {
+            requestBTEnable()
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

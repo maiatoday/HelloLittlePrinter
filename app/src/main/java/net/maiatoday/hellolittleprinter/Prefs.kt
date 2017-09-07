@@ -23,7 +23,7 @@ class Prefs(context: Context) {
     val prefs: SharedPreferences = context.getSharedPreferences(PREFS_FILENAME, 0)
 
     var interval: Int
-        get() = prefs.getInt(INTERVAL, 0)
+        get() = prefs.getInt(INTERVAL, 10)
         set(value) = prefs.edit().putInt(INTERVAL, value).apply()
 
     var count: Int

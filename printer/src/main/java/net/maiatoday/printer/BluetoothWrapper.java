@@ -143,4 +143,14 @@ public class BluetoothWrapper implements LifecycleObserver, BluetoothMessageHand
     public void unableToConnect() {
         callback.popToast("Unable to connect");
     }
+
+    public static boolean checkBluetoothOk() {
+        BluetoothAdapter defaultAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (defaultAdapter != null ) {
+            if (defaultAdapter.isEnabled()) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
